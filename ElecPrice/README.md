@@ -44,4 +44,6 @@ El proyecto está estructurado en:
 
 ## Licencia
 
-© 2025 - Todos los derechos reservados 
+Este proyecto está licenciado bajo la [Licencia MIT](https://opensource.org/licenses/MIT) - ver el archivo LICENSE para más detalles.
+
+MIT License significa que cualquier persona puede usar, modificar, distribuir y usar en proyectos comerciales este código, siempre que se incluya el aviso de copyright y el permiso. 
