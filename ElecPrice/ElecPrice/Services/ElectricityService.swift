@@ -6,10 +6,59 @@ class ElectricityService: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var dataSource: String = "Estimado" // "Web", "API", or "Estimado"
+    @Published var selectedCity: City?
+    @Published var isCitySelected = false
+    @Published var isUsingMockData = false // Nuevo flag para indicar si se están usando datos estimados
     
     private var cancellables = Set<AnyCancellable>()
     
+    private let userDefaultsCityKey = "selectedCity"
+    
+    // Common Spanish cities
+    let availableCities = [
+        City(name: "Madrid"),
+        City(name: "Barcelona"),
+        City(name: "Valencia"),
+        City(name: "Sevilla"),
+        City(name: "Zaragoza"),
+        City(name: "Málaga"),
+        City(name: "Murcia"),
+        City(name: "Palma de Mallorca"),
+        City(name: "Las Palmas de Gran Canaria"),
+        City(name: "Bilbao"),
+        City(name: "Alicante"),
+        City(name: "Córdoba"),
+        City(name: "Valladolid"),
+        City(name: "Vigo"),
+        City(name: "Gijón"),
+        City(name: "Granada"),
+        City(name: "A Coruña"),
+        City(name: "Sanlúcar de Barrameda")
+    ]
+    
     init() {
+        loadSelectedCity()
+        if isCitySelected {
+            fetchPriceData()
+        }
+    }
+    
+    func loadSelectedCity() {
+        if let savedData = UserDefaults.standard.data(forKey: userDefaultsCityKey),
+           let decodedCity = try? JSONDecoder().decode(City.self, from: savedData) {
+            selectedCity = decodedCity
+            isCitySelected = true
+        }
+    }
+    
+    func saveSelectedCity(_ city: City) {
+        selectedCity = city
+        isCitySelected = true
+        
+        if let encodedData = try? JSONEncoder().encode(city) {
+            UserDefaults.standard.set(encodedData, forKey: userDefaultsCityKey)
+        }
+        
         fetchPriceData()
     }
     
@@ -235,6 +284,7 @@ class ElectricityService: ObservableObject {
                         self.isLoading = false
                         self.errorMessage = nil
                         self.dataSource = "Web"
+                        self.isUsingMockData = false
                     } else {
                         // If we couldn't parse any prices, try the API
                         self.fetchRealPriceData()
@@ -363,6 +413,7 @@ class ElectricityService: ObservableObject {
                             self.dailyData.prices = prices
                             self.errorMessage = nil
                             self.dataSource = "API"
+                            self.isUsingMockData = false
                         }
                     } else {
                         self.errorMessage = "Formato de datos inesperado"
@@ -397,10 +448,10 @@ class ElectricityService: ObservableObject {
                     price = Double.random(in: 0.15...0.20)
                 case 10..<14:
                     // Mid-day (high)
-                    price = Double.random(in: 0.22...0.28)
+                    price = Double.random(in: 0.18...0.23)
                 case 17..<22:
                     // Evening peak (highest)
-                    price = Double.random(in: 0.28...0.35)
+                    price = Double.random(in: 0.25...0.35)
                 case 22..<24:
                     // Late evening (medium-high)
                     price = Double.random(in: 0.18...0.25)
@@ -408,14 +459,27 @@ class ElectricityService: ObservableObject {
                     price = 0.15
                 }
                 
-                // Price in €/kWh
                 let priceData = ElectricityPrice(hour: date, price: price)
                 prices.append(priceData)
             }
         }
         
+        // Sort prices by hour
+        prices.sort { $0.hour < $1.hour }
+        
         self.dailyData.prices = prices
         self.dataSource = "Estimado"
+        self.isUsingMockData = true // Marcamos que se están usando datos estimados
+        
+        // Si no hay un mensaje de error específico, añadimos un aviso sobre los datos estimados
+        if self.errorMessage == nil {
+            self.errorMessage = "AVISO: Usando precios estimados. Estos NO son precios reales de electricidad. Los datos reales no están disponibles en este momento."
+        } else {
+            // Si ya hay un error, añadimos el aviso sobre datos estimados
+            self.errorMessage = self.errorMessage! + "\n\nSe muestran precios ESTIMADOS que NO son reales."
+        }
+        
+        self.isLoading = false
     }
 }
 

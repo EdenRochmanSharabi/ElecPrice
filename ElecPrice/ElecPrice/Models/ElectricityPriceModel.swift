@@ -11,6 +11,15 @@ struct ElectricityPrice: Identifiable, Codable {
     }
 }
 
+struct City: Identifiable, Codable, Equatable {
+    let id = UUID()
+    let name: String
+    
+    static func == (lhs: City, rhs: City) -> Bool {
+        return lhs.name == rhs.name
+    }
+}
+
 struct DailyPriceData {
     var prices: [ElectricityPrice] = []
     var currentPrice: Double {

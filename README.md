@@ -1,6 +1,6 @@
-# ElecPrice - Precios de Electricidad para Sanlúcar
+# ElecPrice - Precios de Electricidad para España
 
-Una aplicación iOS para consultar los precios de electricidad en tiempo real para Sanlúcar.
+Una aplicación iOS para consultar los precios de electricidad en tiempo real para España.
 
 ## Características
 
